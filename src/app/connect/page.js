@@ -5,7 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Inter } from 'next/font/google';
+import { ChevronDown, Moon, Sun } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 const socialProviders = [
   { name: 'Google', logo: '/logos/google-icon-logo-svgrepo-com.svg' },
@@ -16,6 +20,7 @@ const socialProviders = [
 export default function ConnectPage() {
   const router = useRouter();
   const [mode, setMode] = useState('login');
+  const [isDarkPreview, setIsDarkPreview] = useState(false);
   const [credentials, setCredentials] = useState({
     emailOrPhone: '',
     password: '',
@@ -99,7 +104,9 @@ export default function ConnectPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] text-[#17171f] overflow-x-hidden flex items-center justify-center px-4 py-10 sm:px-6 sm:py-14">
+    <main
+      className={`${inter.className} min-h-screen bg-[#F9FAFB] text-[#17171f] overflow-x-hidden flex items-center justify-center px-4 py-10 sm:px-6 sm:py-14`}
+    >
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -117,18 +124,18 @@ export default function ConnectPage() {
           />
         </div>
 
-        <div className="rounded-[26px] border border-[#e9ebf0] bg-white p-6 shadow-[0_28px_60px_rgba(19,27,54,0.08)] sm:p-8">
+        <div className="rounded-3xl bg-white px-7 py-10 shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:px-10 sm:py-12">
           <h1 className="text-center text-[30px] font-semibold tracking-[-0.015em] text-[#0f172a]">
-            {mode === 'login' ? 'Log in' : 'Sign up'}
+            Welcome to NoOnes
           </h1>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-7 flex items-center justify-center gap-7">
             {socialProviders.map((provider) => (
               <button
                 key={provider.name}
                 type="button"
                 aria-label={`Continue with ${provider.name}`}
-                className="flex h-12 items-center justify-center rounded-xl border border-[#e8ebf2] bg-white transition-colors hover:border-[#d8dde8] hover:bg-[#f8fafc]"
+                className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-[#f3f4f6]"
               >
                 <div className="relative h-6 w-6">
                   <Image
@@ -150,7 +157,7 @@ export default function ConnectPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-            <label className="block text-sm text-[#475569]" htmlFor="emailOrPhone">
+            <label className="block text-xs font-medium text-[#6b7280]" htmlFor="emailOrPhone">
               Email/Phone number
             </label>
             <input
@@ -159,11 +166,11 @@ export default function ConnectPage() {
               value={credentials.emailOrPhone}
               onChange={handleFieldChange('emailOrPhone')}
               placeholder="Email/Phone number"
-              className="w-full rounded-xl border border-[#d7deea] bg-white px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#f9be00]"
+              className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
               autoComplete="username"
             />
 
-            <label className="block text-sm text-[#475569]" htmlFor="password">
+            <label className="block text-xs font-medium text-[#6b7280]" htmlFor="password">
               Password
             </label>
             <input
@@ -172,7 +179,7 @@ export default function ConnectPage() {
               value={credentials.password}
               onChange={handleFieldChange('password')}
               placeholder="Password"
-              className="w-full rounded-xl border border-[#d7deea] bg-white px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#f9be00]"
+              className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
               autoComplete="current-password"
             />
 
@@ -185,9 +192,14 @@ export default function ConnectPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#f9be00] px-5 py-3 text-sm font-semibold text-[#1e293b] transition-colors duration-200 hover:bg-[#ebb300] disabled:cursor-not-allowed disabled:opacity-70"
+              aria-label={mode === 'login' ? 'Log in' : 'Sign up'}
+              className="flex w-full items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-5 py-3 shadow-[0_1px_1px_rgba(0,0,0,0.03)] transition-colors duration-200 hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Sign up'}
+              <span
+                className={`h-7 w-7 rounded-full border-[3px] border-transparent border-t-[#00A651] border-r-[#00A651] ${
+                  loading ? 'animate-spin' : 'animate-spin'
+                }`}
+              />
             </button>
 
             {errorMessage ? <p className="text-sm text-red-500">{errorMessage}</p> : null}
@@ -199,7 +211,7 @@ export default function ConnectPage() {
             <button
               type="button"
               onClick={() => setMode((current) => (current === 'login' ? 'signup' : 'login'))}
-              className="text-[#0f172a] transition-colors hover:text-[#f59e0b]"
+              className="text-[#00A651] transition-colors hover:text-[#028d47]"
             >
               {mode === 'login' ? 'Sign up' : 'Log in'}
             </button>
@@ -209,6 +221,27 @@ export default function ConnectPage() {
             <Link href="/" className="text-[#0f172a] transition-colors hover:text-[#f59e0b]">
               Back to home
             </Link>
+          </div>
+
+          <div className="mt-9 flex items-center justify-between text-sm text-[#6b7280]">
+            <button
+              type="button"
+              onClick={() => setIsDarkPreview((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-[#f3f4f6]"
+              aria-label="Toggle theme"
+            >
+              <Sun className={`h-4 w-4 ${isDarkPreview ? 'text-[#9ca3af]' : 'text-[#f59e0b]'}`} />
+              <Moon className={`h-4 w-4 ${isDarkPreview ? 'text-[#111827]' : 'text-[#cbd5e1]'}`} />
+            </button>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 transition-colors hover:bg-[#f3f4f6]"
+              aria-label="Select language"
+            >
+              <span>English</span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </motion.section>
