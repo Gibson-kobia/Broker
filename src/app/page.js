@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, Shield, Zap, Globe, Activity, Code, 
-  CreditCard, ChevronRight, Menu, X, 
+  CreditCard, ChevronRight, Menu, X,
   Wallet, PieChart, Terminal, CheckCircle2,
-  TrendingUp
+  Mail, LockKeyhole, Send
 } from 'lucide-react';
 
 // --- THEME & UTILS ---
@@ -53,6 +53,18 @@ const GradientText = ({ children, className = '' }) => (
   <span className={`bg-clip-text text-transparent bg-gradient-to-r ${colors.primary} ${className}`}>
     {children}
   </span>
+);
+
+const GoogleIcon = () => (
+  <span className="text-sm font-semibold tracking-tight text-white">G</span>
+);
+
+const AppleIcon = () => (
+  <span className="text-sm font-semibold tracking-tight text-white">A</span>
+);
+
+const TelegramIcon = () => (
+  <Send className="w-4 h-4 text-white" />
 );
 
 // --- NAVBAR ---
@@ -368,69 +380,129 @@ const DeveloperSection = ({ showToast }) => {
 
 // --- CTA ---
 const CTA = ({ showToast }) => {
-  const [email, setEmail] = useState('');
+  const [credentials, setCredentials] = useState({
+    emailOrPhone: '',
+    password: '',
+  });
+
+  const handleFieldChange = (field) => (event) => {
+    setCredentials((current) => ({
+      ...current,
+      [field]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (!credentials.emailOrPhone.trim() || !credentials.password.trim()) {
+      showToast('Enter your email or phone and password.');
+      return;
+    }
+
+    showToast('Nexara login flow would continue here.');
+  };
+
+  const socialProviders = [
+    { name: 'Google', icon: <GoogleIcon /> },
+    { name: 'Apple', icon: <AppleIcon /> },
+    { name: 'Telegram', icon: <TelegramIcon /> },
+  ];
 
   return (
     <section id="company" className="py-24 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0 bg-black pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[420px] bg-emerald-500/10 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[260px] bg-white/5 blur-[90px] rounded-full pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
+      <div className="max-w-4xl mx-auto px-6 relative z-10 flex justify-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-md"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 mb-8 backdrop-blur-sm">
-            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-xs font-medium text-slate-300">Now in early access</span>
-          </div>
+          <div className="rounded-[28px] border border-white/10 bg-[#111214]/95 p-5 sm:p-7 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+            <div className="mb-6 flex items-center justify-center gap-3">
+              {socialProviders.map((provider) => (
+                <button
+                  key={provider.name}
+                  type="button"
+                  onClick={() => showToast(`${provider.name} sign-in would continue here.`)}
+                  aria-label={`Continue with ${provider.name}`}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
+                >
+                  {provider.icon}
+                </button>
+              ))}
+            </div>
 
-          <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
-            The infrastructure for the<br />
-            <GradientText>next era of finance.</GradientText>
-          </h2>
+            <div className="mb-6 text-center">
+              <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-[2rem]">
+                Welcome to Nexara
+              </h2>
+            </div>
 
-          <p className="text-base md:text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of traders, developers, and institutions already using Nexara to unify their financial stack and route liquidity at scale.
-          </p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <label className="block">
+                <span className="sr-only">Email or phone number</span>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 transition-colors duration-300 focus-within:border-emerald-500/50">
+                  <Mail className="h-4 w-4 text-slate-500" />
+                  <input
+                    type="text"
+                    value={credentials.emailOrPhone}
+                    onChange={handleFieldChange('emailOrPhone')}
+                    placeholder="Email/Phone number"
+                    className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
+                    autoComplete="username"
+                  />
+                </div>
+              </label>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center max-w-md mx-auto mb-12">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full px-5 py-3 rounded-full bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500/50 transition-all duration-300"
-            />
-            <Button
-              onClick={() => {
-                if (email) {
-                  showToast("You're on the waitlist!");
-                  setEmail('');
-                } else {
-                  showToast('Please enter a valid email.');
-                }
-              }}
-              className="whitespace-nowrap w-full sm:w-auto"
-            >
-              Get Early Access
-            </Button>
-          </div>
+              <label className="block">
+                <span className="sr-only">Password</span>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 transition-colors duration-300 focus-within:border-emerald-500/50">
+                  <LockKeyhole className="h-4 w-4 text-slate-500" />
+                  <input
+                    type="password"
+                    value={credentials.password}
+                    onChange={handleFieldChange('password')}
+                    placeholder="Password"
+                    className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
+                    autoComplete="current-password"
+                  />
+                </div>
+              </label>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
-            {[
-              { icon: Shield, text: 'No credit card required' },
-              { icon: Zap, text: 'Free during beta' },
-              { icon: CheckCircle2, text: 'Cancel anytime' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-2">
-                <Icon className="w-4 h-4 text-slate-600" />
-                <span>{text}</span>
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => showToast('Password recovery would continue here.')}
+                  className="text-sm text-slate-400 transition-colors duration-300 hover:text-white"
+                >
+                  Forgot password?
+                </button>
               </div>
-            ))}
+
+              <button
+                type="submit"
+                className="w-full rounded-2xl bg-emerald-500 px-5 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-emerald-400"
+              >
+                Log in
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-slate-400">
+              No account yet?{' '}
+              <button
+                type="button"
+                onClick={() => showToast('Sign up flow would continue here.')}
+                className="font-medium text-white transition-colors duration-300 hover:text-emerald-300"
+              >
+                Sign up
+              </button>
+            </p>
           </div>
         </motion.div>
       </div>
