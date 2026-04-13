@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 
 const socialProviders = [
   { name: 'Google', logo: '/logos/google-icon-logo-svgrepo-com.svg' },
@@ -12,10 +14,15 @@ const socialProviders = [
 ];
 
 export default function ConnectPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState('login');
   const [credentials, setCredentials] = useState({
     emailOrPhone: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleFieldChange = (field) => (event) => {
     setCredentials((current) => ({
@@ -24,8 +31,71 @@ export default function ConnectPage() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const email = credentials.emailOrPhone.trim();
+    const password = credentials.password;
+
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!email || !password) {
+      setErrorMessage('Please provide both email and password.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const supabase = createClient();
+
+      if (mode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setErrorMessage(error.message);
+          return;
+        }
+
+        router.push('/dashboard');
+        router.refresh();
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      if (data?.user) {
+        await supabase.from('profiles').upsert(
+          {
+            id: data.user.id,
+            email: data.user.email,
+          },
+          { onConflict: 'id' }
+        );
+      }
+
+      if (data?.session) {
+        router.push('/dashboard');
+        router.refresh();
+        return;
+      }
+
+      setSuccessMessage('Signup successful. Check your email to confirm your account.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,7 +118,9 @@ export default function ConnectPage() {
         </div>
 
         <div className="rounded-[26px] border border-[#e9ebf0] bg-white p-6 shadow-[0_28px_60px_rgba(19,27,54,0.08)] sm:p-8">
-          <h1 className="text-center text-[30px] font-semibold tracking-[-0.015em] text-[#0f172a]">Log in</h1>
+          <h1 className="text-center text-[30px] font-semibold tracking-[-0.015em] text-[#0f172a]">
+            {mode === 'login' ? 'Log in' : 'Sign up'}
+          </h1>
 
           <div className="mt-6 grid grid-cols-3 gap-3">
             {socialProviders.map((provider) => (
@@ -112,16 +184,30 @@ export default function ConnectPage() {
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-[#f9be00] px-5 py-3 text-sm font-semibold text-[#1e293b] transition-colors duration-200 hover:bg-[#ebb300]"
+              disabled={loading}
+              className="w-full rounded-xl bg-[#f9be00] px-5 py-3 text-sm font-semibold text-[#1e293b] transition-colors duration-200 hover:bg-[#ebb300] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Log in
+              {loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Sign up'}
             </button>
+
+            {errorMessage ? <p className="text-sm text-red-500">{errorMessage}</p> : null}
+            {successMessage ? <p className="text-sm text-emerald-600">{successMessage}</p> : null}
           </form>
 
           <div className="mt-6 text-center text-sm text-[#64748b]">
-            No account yet?{' '}
+            {mode === 'login' ? 'No account yet?' : 'Already have an account?'}{' '}
+            <button
+              type="button"
+              onClick={() => setMode((current) => (current === 'login' ? 'signup' : 'login'))}
+              className="text-[#0f172a] transition-colors hover:text-[#f59e0b]"
+            >
+              {mode === 'login' ? 'Sign up' : 'Log in'}
+            </button>
+          </div>
+
+          <div className="mt-2 text-center text-sm text-[#64748b]">
             <Link href="/" className="text-[#0f172a] transition-colors hover:text-[#f59e0b]">
-              Sign up
+              Back to home
             </Link>
           </div>
         </div>

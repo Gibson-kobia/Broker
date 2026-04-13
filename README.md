@@ -1,5 +1,35 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Supabase setup
+
+Create `.env.local` and add:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://jasxxknvegqjzgvhzxjr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+```
+
+Run the SQL files in order from `supabase/sql/` in your Supabase SQL editor:
+
+1. `001_create_tables.sql`
+2. `002_enable_rls_policies.sql`
+
+To grant admin access for `/admin`, set one user profile row manually:
+
+```sql
+update public.profiles
+set is_admin = true
+where email = 'your-admin-email@example.com';
+```
+
+## Auth and data flow included
+
+- Email/password signup and login on `/connect`
+- Authenticated redirect to `/dashboard`
+- Platform connection submissions stored in `platform_connections`
+- Admin-only submissions table on `/admin`
+- Submissions store only: `platform`, `email`, `created_at`, `user_id`
+
 ## Getting Started
 
 First, run the development server:
