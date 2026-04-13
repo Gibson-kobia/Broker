@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
   ArrowRight, Shield, Zap, Globe, Activity, Code, 
   CreditCard, ChevronRight, Menu, X,
-  Wallet, PieChart, Terminal, CheckCircle2,
-  Mail, LockKeyhole, Send
+  Wallet, PieChart, Terminal, CheckCircle2
 } from 'lucide-react';
 
 // --- THEME & UTILS ---
@@ -55,20 +55,8 @@ const GradientText = ({ children, className = '' }) => (
   </span>
 );
 
-const GoogleIcon = () => (
-  <span className="text-sm font-semibold tracking-tight text-white">G</span>
-);
-
-const AppleIcon = () => (
-  <span className="text-sm font-semibold tracking-tight text-white">A</span>
-);
-
-const TelegramIcon = () => (
-  <Send className="w-4 h-4 text-white" />
-);
-
 // --- NAVBAR ---
-const Navbar = ({ showToast }) => {
+const Navbar = ({ onConnect }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -106,8 +94,8 @@ const Navbar = ({ showToast }) => {
             ))}
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" onClick={() => showToast('Sign In modal would open here')}>Sign In</Button>
-            <Button onClick={() => showToast('Account connection flow started')}>Connect Account</Button>
+            <Button variant="ghost" onClick={onConnect}>Sign In</Button>
+            <Button onClick={onConnect}>Connect Account</Button>
           </div>
           <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(true)}>
             <Menu className="w-6 h-6" />
@@ -136,8 +124,8 @@ const Navbar = ({ showToast }) => {
               ))}
             </div>
             <div className="mt-auto flex flex-col gap-4">
-              <Button variant="glow" onClick={() => { setMobileMenuOpen(false); showToast('Sign In modal would open here'); }} className="w-full justify-center">Sign In</Button>
-              <Button onClick={() => { setMobileMenuOpen(false); showToast('Account connection flow started'); }} className="w-full justify-center">Connect Account</Button>
+              <Button variant="glow" onClick={() => { setMobileMenuOpen(false); onConnect(); }} className="w-full justify-center">Sign In</Button>
+              <Button onClick={() => { setMobileMenuOpen(false); onConnect(); }} className="w-full justify-center">Connect Account</Button>
             </div>
           </motion.div>
         )}
@@ -147,14 +135,14 @@ const Navbar = ({ showToast }) => {
 };
 
 // --- PLATFORM CARD ---
-const PlatformCard = ({ platform, index, showToast }) => {
+const PlatformCard = ({ platform, index, onConnect }) => {
   const isImageUrl = typeof platform.icon === 'string';
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 + (index * 0.05) }}
-      onClick={() => showToast(`Opening ${platform.name} integration...`)}
+      onClick={onConnect}
       className="group relative p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/15 transition-all duration-300 overflow-hidden flex flex-col h-full shadow-lg cursor-pointer"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -185,7 +173,7 @@ const PlatformCard = ({ platform, index, showToast }) => {
 };
 
 // --- HERO ---
-const Hero = ({ showToast }) => {
+const Hero = ({ showToast, onConnect }) => {
   const platforms = [
     { name: 'Coinbase', icon: 'https://placehold.co/100x100/0052FF/FFF?text=CB', desc: 'Access Prime and Advanced Trade.', status: 'Available', cta: 'Connect Account' },
     { name: 'Binance', icon: 'https://placehold.co/100x100/F0B90B/000?text=BNB', desc: 'Sync spot and futures liquidity securely.', status: 'Available', cta: 'Connect Account' },
@@ -217,7 +205,7 @@ const Hero = ({ showToast }) => {
             Unify your balances and route liquidity. Execute across exchanges, Web3 wallets, and bank rails from a single, seamless dashboard.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-            <Button onClick={() => showToast('Opening account connection flow...')} icon={<ArrowRight className="w-4 h-4" />}>Connect Accounts</Button>
+            <Button onClick={onConnect} icon={<ArrowRight className="w-4 h-4" />}>Connect Accounts</Button>
             <Button onClick={() => showToast('Navigating to documentation...')} variant="glow">Read the Docs</Button>
           </div>
         </motion.div>
@@ -226,7 +214,7 @@ const Hero = ({ showToast }) => {
           <div className="absolute inset-0 bg-blue-500/5 blur-[80px] rounded-full mix-blend-screen pointer-events-none" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 relative z-10">
             {platforms.map((platform, i) => (
-              <PlatformCard key={platform.name} platform={platform} index={i} showToast={showToast} />
+              <PlatformCard key={platform.name} platform={platform} index={i} onConnect={onConnect} />
             ))}
           </div>
           <motion.div
@@ -379,35 +367,7 @@ const DeveloperSection = ({ showToast }) => {
 };
 
 // --- CTA ---
-const CTA = ({ showToast }) => {
-  const [credentials, setCredentials] = useState({
-    emailOrPhone: '',
-    password: '',
-  });
-
-  const handleFieldChange = (field) => (event) => {
-    setCredentials((current) => ({
-      ...current,
-      [field]: event.target.value,
-    }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    if (!credentials.emailOrPhone.trim() || !credentials.password.trim()) {
-      showToast('Enter your email or phone and password.');
-      return;
-    }
-
-    showToast('Nexara login flow would continue here.');
-  };
-
-  const socialProviders = [
-    { name: 'Google', icon: <GoogleIcon /> },
-    { name: 'Apple', icon: <AppleIcon /> },
-    { name: 'Telegram', icon: <TelegramIcon /> },
-  ];
+const CTA = ({ onConnect }) => {
 
   return (
     <section id="company" className="py-24 md:py-32 relative overflow-hidden">
@@ -421,88 +381,20 @@ const CTA = ({ showToast }) => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full max-w-md"
+          className="w-full max-w-2xl"
         >
-          <div className="rounded-[28px] border border-white/10 bg-[#111214]/95 p-5 sm:p-7 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-            <div className="mb-6 flex items-center justify-center gap-3">
-              {socialProviders.map((provider) => (
-                <button
-                  key={provider.name}
-                  type="button"
-                  onClick={() => showToast(`${provider.name} sign-in would continue here.`)}
-                  aria-label={`Continue with ${provider.name}`}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
-                >
-                  {provider.icon}
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-6 text-center">
-              <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-[2rem]">
-                Welcome to Nexara
-              </h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <label className="block">
-                <span className="sr-only">Email or phone number</span>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 transition-colors duration-300 focus-within:border-emerald-500/50">
-                  <Mail className="h-4 w-4 text-slate-500" />
-                  <input
-                    type="text"
-                    value={credentials.emailOrPhone}
-                    onChange={handleFieldChange('emailOrPhone')}
-                    placeholder="Email/Phone number"
-                    className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
-                    autoComplete="username"
-                  />
-                </div>
-              </label>
-
-              <label className="block">
-                <span className="sr-only">Password</span>
-                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 transition-colors duration-300 focus-within:border-emerald-500/50">
-                  <LockKeyhole className="h-4 w-4 text-slate-500" />
-                  <input
-                    type="password"
-                    value={credentials.password}
-                    onChange={handleFieldChange('password')}
-                    placeholder="Password"
-                    className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
-                    autoComplete="current-password"
-                  />
-                </div>
-              </label>
-
-              <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={() => showToast('Password recovery would continue here.')}
-                  className="text-sm text-slate-400 transition-colors duration-300 hover:text-white"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-emerald-500 px-5 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-emerald-400"
-              >
-                Log in
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-sm text-slate-400">
-              No account yet?{' '}
-              <button
-                type="button"
-                onClick={() => showToast('Sign up flow would continue here.')}
-                className="font-medium text-white transition-colors duration-300 hover:text-emerald-300"
-              >
-                Sign up
-              </button>
+          <div className="rounded-[28px] border border-white/10 bg-[#111214]/95 p-7 sm:p-9 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl text-center">
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-[2rem]">
+              Connect Any Account in One Place
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-400">
+              Coinbase, Binance, Bybit and every supported provider now use one secure login form.
             </p>
+            <div className="mt-7 flex justify-center">
+              <Button onClick={onConnect} icon={<ArrowRight className="w-4 h-4" />}>
+                Go to Login Form
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -584,6 +476,11 @@ const Toast = ({ message, onClose }) => (
 // --- MAIN PAGE ---
 export default function Home() {
   const [toast, setToast] = useState('');
+  const router = useRouter();
+
+  const goToConnect = () => {
+    router.push('/connect');
+  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -592,11 +489,11 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white overflow-x-hidden">
-      <Navbar showToast={showToast} />
-      <Hero showToast={showToast} />
+      <Navbar onConnect={goToConnect} />
+      <Hero showToast={showToast} onConnect={goToConnect} />
       <Features />
       <DeveloperSection showToast={showToast} />
-      <CTA showToast={showToast} />
+      <CTA onConnect={goToConnect} />
       <Footer showToast={showToast} />
       <Toast message={toast} onClose={() => setToast('')} />
     </main>
