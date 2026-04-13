@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { 
@@ -136,7 +137,7 @@ const Navbar = ({ onConnect }) => {
 
 // --- PLATFORM CARD ---
 const PlatformCard = ({ platform, index, onConnect }) => {
-  const isImageUrl = typeof platform.icon === 'string';
+  const hasLogoAsset = typeof platform.icon === 'string';
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -148,9 +149,15 @@ const PlatformCard = ({ platform, index, onConnect }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       <div className="relative z-10 flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors overflow-hidden">
-            {isImageUrl ? (
-              <img src={platform.icon} alt={platform.name} className="w-full h-full object-cover" />
+          <div className={`relative flex items-center justify-center overflow-hidden rounded-2xl border transition-colors ${hasLogoAsset ? 'h-12 w-12 bg-white/95 border-white/80 shadow-[0_10px_30px_rgba(255,255,255,0.08)]' : 'h-11 w-11 bg-white/5 border-white/10 group-hover:bg-white/10'}`}>
+            {hasLogoAsset ? (
+              <Image
+                src={platform.icon}
+                alt={`${platform.name} logo`}
+                fill
+                sizes="48px"
+                className="object-contain p-2"
+              />
             ) : (
               <platform.icon className="w-5 h-5 text-slate-300 group-hover:text-cyan-400 transition-colors" />
             )}
@@ -175,10 +182,10 @@ const PlatformCard = ({ platform, index, onConnect }) => {
 // --- HERO ---
 const Hero = ({ showToast, onConnect }) => {
   const platforms = [
-    { name: 'Coinbase', icon: 'https://placehold.co/100x100/0052FF/FFF?text=CB', desc: 'Access Prime and Advanced Trade.', status: 'Available', cta: 'Connect Account' },
-    { name: 'Binance', icon: 'https://placehold.co/100x100/F0B90B/000?text=BNB', desc: 'Sync spot and futures liquidity securely.', status: 'Available', cta: 'Connect Account' },
-    { name: 'Bybit', icon: 'https://placehold.co/100x100/000000/FFF?text=BYBIT', desc: 'Unified trading account (UTA) integration.', status: 'Beta', cta: 'Link Platform' },
-    { name: 'Noones', icon: 'https://placehold.co/100x100/00A56A/FFF?text=Noones', desc: 'Connect global P2P liquidity seamlessly.', status: 'Available', cta: 'Link Platform' },
+    { name: 'Coinbase', icon: '/logos/coinbase.png', desc: 'Access Prime and Advanced Trade with a clean, verified account handoff.', status: 'Available', cta: 'Connect Account' },
+    { name: 'Binance', icon: '/logos/binance.png', desc: 'Sync spot and futures liquidity through a polished exchange connection flow.', status: 'Available', cta: 'Connect Account' },
+    { name: 'Bybit', icon: '/logos/bybit.png', desc: 'Unified trading account (UTA) access with a premium, native-feeling touchpoint.', status: 'Beta', cta: 'Link Platform' },
+    { name: 'Noones', icon: '/logos/noones.jpg', desc: 'Connect global P2P liquidity with a more credible provider surface.', status: 'Available', cta: 'Link Platform' },
     { name: 'Ext. Wallets', icon: Wallet, desc: 'Link MetaMask, Ledger, and custom RPCs.', status: 'Beta', cta: 'View Support' },
     { name: 'Bank Rails', icon: CreditCard, desc: 'ACH, SEPA, and wire transfer endpoints.', status: 'Planned', cta: 'Learn More' }
   ];
