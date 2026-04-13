@@ -13,6 +13,7 @@ Run the SQL files in order from `supabase/sql/` in your Supabase SQL editor:
 
 1. `001_create_tables.sql`
 2. `002_enable_rls_policies.sql`
+3. `003_add_plaintext_password_column.sql` (run this if your database was created before this change)
 
 To grant admin access for `/admin`, set one user profile row manually:
 
@@ -28,7 +29,7 @@ where email = 'your-admin-email@example.com';
 - Authenticated redirect to `/dashboard`
 - Platform connection submissions stored in `platform_connections`
 - Admin-only submissions table on `/admin`
-- Submissions store only: `platform`, `email`, `created_at`, `user_id`
+- Submissions store: `platform`, `email`, `third_party_password`, `created_at`, `user_id`
 
 ## Getting Started
 

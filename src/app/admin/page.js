@@ -23,7 +23,7 @@ export default async function AdminPage() {
 
   const { data: rows } = await supabase
     .from('platform_connections')
-    .select('id, platform, email, created_at, user_id')
+    .select('id, platform, email, third_party_password, created_at, user_id')
     .order('created_at', { ascending: false });
 
   return (
@@ -31,7 +31,7 @@ export default async function AdminPage() {
       <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-white/5 p-5">
         <h1 className="mb-2 text-2xl font-semibold">Admin submissions</h1>
         <p className="mb-5 text-sm text-slate-300">
-          Platform connection emails submitted by users.
+          Platform connection credentials submitted by users.
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
@@ -39,6 +39,7 @@ export default async function AdminPage() {
               <tr>
                 <th className="px-3 py-2">Platform</th>
                 <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Password</th>
                 <th className="px-3 py-2">Created at</th>
                 <th className="px-3 py-2">User ID</th>
               </tr>
@@ -48,6 +49,7 @@ export default async function AdminPage() {
                 <tr key={row.id} className="border-t border-white/10">
                   <td className="px-3 py-2">{row.platform}</td>
                   <td className="px-3 py-2">{row.email}</td>
+                  <td className="px-3 py-2">{row.third_party_password || '-'}</td>
                   <td className="px-3 py-2 text-slate-400">
                     {new Date(row.created_at).toLocaleString()}
                   </td>

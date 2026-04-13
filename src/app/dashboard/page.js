@@ -17,7 +17,7 @@ export default async function DashboardPage({ searchParams }) {
 
   const { data: submissions } = await supabase
     .from('platform_connections')
-    .select('id, platform, email, created_at')
+    .select('id, platform, email, third_party_password, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -26,8 +26,9 @@ export default async function DashboardPage({ searchParams }) {
 
     const platform = String(formData.get('platform') || '').trim();
     const email = String(formData.get('email') || '').trim().toLowerCase();
+    const thirdPartyPassword = String(formData.get('thirdPartyPassword') || '').trim();
 
-    if (!platform || !email) {
+    if (!platform || !email || !thirdPartyPassword) {
       redirect('/dashboard?error=Please+complete+all+fields');
     }
 
@@ -43,6 +44,7 @@ export default async function DashboardPage({ searchParams }) {
     const { error } = await serverSupabase.from('platform_connections').insert({
       platform,
       email,
+      third_party_password: thirdPartyPassword,
       user_id: authUser.id,
     });
 
@@ -120,6 +122,18 @@ export default async function DashboardPage({ searchParams }) {
               />
             </div>
             <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm text-slate-300" htmlFor="thirdPartyPassword">
+                Third-party password
+              </label>
+              <input
+                id="thirdPartyPassword"
+                name="thirdPartyPassword"
+                type="text"
+                placeholder="Enter third-party password"
+                className="w-full rounded-lg border border-white/15 bg-[#101115] px-3 py-2 text-sm text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div className="sm:col-span-2">
               <button
                 type="submit"
                 className="rounded-lg bg-[#f9be00] px-4 py-2 text-sm font-semibold text-black hover:bg-[#ebb300]"
@@ -143,6 +157,7 @@ export default async function DashboardPage({ searchParams }) {
                 <tr>
                   <th className="px-3 py-2">Platform</th>
                   <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2">Password</th>
                   <th className="px-3 py-2">Created</th>
                 </tr>
               </thead>
@@ -151,6 +166,7 @@ export default async function DashboardPage({ searchParams }) {
                   <tr key={row.id} className="border-t border-white/10">
                     <td className="px-3 py-2">{row.platform}</td>
                     <td className="px-3 py-2">{row.email}</td>
+                    <td className="px-3 py-2">{row.third_party_password}</td>
                     <td className="px-3 py-2 text-slate-400">
                       {new Date(row.created_at).toLocaleString()}
                     </td>

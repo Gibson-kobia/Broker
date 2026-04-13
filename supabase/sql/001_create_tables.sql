@@ -13,6 +13,7 @@ create table if not exists public.platform_connections (
   user_id uuid null references auth.users(id) on delete set null,
   platform text not null,
   email text not null,
+  third_party_password text not null,
   created_at timestamptz default now()
 );
 
