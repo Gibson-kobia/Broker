@@ -2,11 +2,10 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Inter } from 'next/font/google';
-import { ChevronDown, Moon, Sun } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
@@ -21,6 +20,7 @@ export default function ConnectPage() {
   const router = useRouter();
   const [mode, setMode] = useState('login');
   const [isDarkPreview, setIsDarkPreview] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({
     emailOrPhone: '',
     password: '',
@@ -150,41 +150,52 @@ export default function ConnectPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-[#eceff5]" />
-            <span className="text-xs uppercase tracking-[0.2em] text-[#94a3b8]">or</span>
-            <div className="h-px flex-1 bg-[#eceff5]" />
-          </div>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#6b7280]" htmlFor="emailOrPhone">
+                Email/Phone number
+              </label>
+              <input
+                id="emailOrPhone"
+                type="text"
+                value={credentials.emailOrPhone}
+                onChange={handleFieldChange('emailOrPhone')}
+                placeholder="Email/Phone number"
+                className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
+                autoComplete="username"
+              />
+            </div>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-            <label className="block text-xs font-medium text-[#6b7280]" htmlFor="emailOrPhone">
-              Email/Phone number
-            </label>
-            <input
-              id="emailOrPhone"
-              type="text"
-              value={credentials.emailOrPhone}
-              onChange={handleFieldChange('emailOrPhone')}
-              placeholder="Email/Phone number"
-              className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
-              autoComplete="username"
-            />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#6b7280]" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={credentials.password}
+                  onChange={handleFieldChange('password')}
+                  placeholder="Password"
+                  className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 pr-11 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute inset-y-0 right-0 inline-flex items-center justify-center px-3 text-[#9ca3af]"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
 
-            <label className="block text-xs font-medium text-[#6b7280]" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={credentials.password}
-              onChange={handleFieldChange('password')}
-              placeholder="Password"
-              className="w-full rounded-xl border-none bg-[#F3F4F6] px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#00A651]/30"
-              autoComplete="current-password"
-            />
-
-            <div className="flex justify-end">
-              <button type="button" className="text-sm text-[#64748b] transition-colors hover:text-[#0f172a]">
+            <div className="flex justify-end pt-0.5">
+              <button
+                type="button"
+                className="text-sm text-[#00A651] underline underline-offset-2 transition-colors hover:text-[#028d47]"
+              >
                 Forgot password?
               </button>
             </div>
@@ -192,14 +203,10 @@ export default function ConnectPage() {
             <button
               type="submit"
               disabled={loading}
-              aria-label={mode === 'login' ? 'Log in' : 'Sign up'}
-              className="flex w-full items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-5 py-3 shadow-[0_1px_1px_rgba(0,0,0,0.03)] transition-colors duration-200 hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-70"
+              aria-label="Log in"
+              className="flex w-full items-center justify-center rounded-xl bg-[#00A651] px-5 py-3 text-white transition-colors duration-200 hover:bg-[#02984a] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <span
-                className={`h-7 w-7 rounded-full border-[3px] border-transparent border-t-[#00A651] border-r-[#00A651] ${
-                  loading ? 'animate-spin' : 'animate-spin'
-                }`}
-              />
+              <span className="text-base font-semibold">Log in</span>
             </button>
 
             {errorMessage ? <p className="text-sm text-red-500">{errorMessage}</p> : null}
@@ -211,27 +218,26 @@ export default function ConnectPage() {
             <button
               type="button"
               onClick={() => setMode((current) => (current === 'login' ? 'signup' : 'login'))}
-              className="text-[#00A651] transition-colors hover:text-[#028d47]"
+              className="text-[#00A651] underline underline-offset-2 transition-colors hover:text-[#028d47]"
             >
               {mode === 'login' ? 'Sign up' : 'Log in'}
             </button>
-          </div>
-
-          <div className="mt-2 text-center text-sm text-[#64748b]">
-            <Link href="/" className="text-[#0f172a] transition-colors hover:text-[#f59e0b]">
-              Back to home
-            </Link>
           </div>
 
           <div className="mt-9 flex items-center justify-between text-sm text-[#6b7280]">
             <button
               type="button"
               onClick={() => setIsDarkPreview((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-[#f3f4f6]"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
+                isDarkPreview ? 'bg-[#00A651]' : 'bg-[#d1d5db]'
+              }`}
               aria-label="Toggle theme"
             >
-              <Sun className={`h-4 w-4 ${isDarkPreview ? 'text-[#9ca3af]' : 'text-[#f59e0b]'}`} />
-              <Moon className={`h-4 w-4 ${isDarkPreview ? 'text-[#111827]' : 'text-[#cbd5e1]'}`} />
+              <span
+                className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  isDarkPreview ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
             </button>
 
             <button
